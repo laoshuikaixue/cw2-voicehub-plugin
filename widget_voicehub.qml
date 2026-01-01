@@ -105,7 +105,7 @@ Widget {
             // 版权信息
             Text {
                 visible: status === "success" && songs.length > 0
-                text: "Supported by VoiceHub | LaoShui @ 2025"
+                text: "Supported by VoiceHub | LaoShui @ 2026"
                 font.pointSize: 10
                 horizontalAlignment: Text.AlignHCenter
                 opacity: 0.7
