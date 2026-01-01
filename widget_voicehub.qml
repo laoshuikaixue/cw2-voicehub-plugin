@@ -137,7 +137,7 @@ Widget {
         NumberAnimation {
             id: scrollDown
             target: flickable
-            "contentY"
+            property: "contentY"
             duration: 0
             easing.type: Easing.Linear
         }
@@ -145,7 +145,7 @@ Widget {
         // 2. 立即平滑回滚顶部
         NumberAnimation {
             target: flickable
-            "contentY"
+            property: "contentY"
             to: 0
             duration: 1000
             easing.type: Easing.InOutQuad
