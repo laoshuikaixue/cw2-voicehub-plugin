@@ -1,0 +1,14 @@
+[project]
+name = "com-lao-shui-voicehub"
+version = "1.1.2"
+description = "展示广播站当日排期歌曲，按播放顺序显示歌曲信息"
+authors = [
+    {name = "LaoShui"},
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["class-widgets-sdk"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
