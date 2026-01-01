@@ -8,5 +8,6 @@
   "description": "展示广播站当日排期歌曲，按播放顺序显示歌曲信息",
   "url": "https://github.com/laoshuikaixue/cw2-voicehub-plugin",
   "readme": "README.md",
+  "settings": true,
   "icon": "icon.png"
 }

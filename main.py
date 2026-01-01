@@ -4,16 +4,17 @@ VoiceHub 广播站排期
 """
 
 import time
-import requests
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from PySide6.QtCore import Qt, QTimer, Signal, QThread, Slot
+
+import requests
+from ClassWidgets.SDK import CW2Plugin, PluginAPI, ConfigBaseModel
+from PySide6.QtCore import QTimer, Signal, QThread, Slot
 from loguru import logger
-from ClassWidgets.SDK import CW2Plugin, PluginAPI
 
 WIDGET_ID = 'widget_voicehub'
 WIDGET_NAME = 'VoiceHub 广播站排期'
-API_URL = "https://voicehub.lao-shui.top/api/songs/public"
+DEFAULT_API_URL = "https://voicehub.lao-shui.top/api/songs/public"
 
 HEADERS = {
     'User-Agent': (
@@ -23,21 +24,26 @@ HEADERS = {
 }
 
 
+class PluginConfig(ConfigBaseModel):
+    api_url: str = DEFAULT_API_URL
+
+
 class FetchThread(QThread):
     """网络请求线程"""
     # songs(list), display_date(str), status(str: success/no_schedule)
     fetch_finished = Signal(list, str, str)
     fetch_failed = Signal()
 
-    def __init__(self):
+    def __init__(self, api_url):
         super().__init__()
         self.max_retries = 3
+        self.api_url = api_url
 
     def run(self):
         retry_count = 0
         while retry_count < self.max_retries:
             try:
-                response = requests.get(API_URL, headers=HEADERS, proxies={'http': None, 'https': None})
+                response = requests.get(self.api_url, headers=HEADERS, proxies={'http': None, 'https': None})
                 response.raise_for_status()
                 data = response.json()
 
@@ -56,7 +62,7 @@ class FetchThread(QThread):
                             play_date = datetime.strptime(play_date_str, '%Y-%m-%d').date()
                         except ValueError:
                             continue
-                            
+
                         if play_date == today:
                             today_songs.append(item)
 
@@ -95,7 +101,7 @@ class FetchThread(QThread):
                         return
                 else:
                     logger.error("API返回空数据或格式错误")
-                    
+
             except Exception as e:
                 logger.error(f"请求失败: {e}")
 
@@ -108,16 +114,37 @@ class FetchThread(QThread):
 class Plugin(CW2Plugin):
     # songs(list), display_date(str), status(str)
     contentUpdated = Signal(list, str, str)
-    
+
     def __init__(self, api: PluginAPI):
         super().__init__(api)
         self.api = api
-        
+
         # 缓存数据
         self.songs = []
         self.display_date = ""
         self.status = "loading"  # loading, success, error, no_schedule
-        
+
+        # 注册配置
+        self.config = PluginConfig()
+
+        # 重试定时器
+        self.retry_timer = QTimer()
+        self.retry_timer.timeout.connect(self.update_songs)
+
+        # 定期更新定时器 (1小时)
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self.update_songs)
+
+    def on_load(self):
+        super().on_load()
+
+        # 注册配置
+        self.api.config.register_plugin_model(self.meta.get("id"), self.config)
+
+        # 注册设置页面
+        settings_qml_path = Path(__file__).parent / "settings.qml"
+        self.api.ui.register_settings_page(self, settings_qml_path, "VoiceHub 设置", "ic_fluent_settings_20_regular")
+
         # 注册小组件
         widget_qml_path = Path(__file__).parent / "widget_voicehub.qml"
         self.api.widgets.register(
@@ -127,14 +154,10 @@ class Plugin(CW2Plugin):
             backend_obj=self
         )
 
-        # 重试定时器
-        self.retry_timer = QTimer()
-        self.retry_timer.timeout.connect(self.update_songs)
-
-        # 定期更新定时器 (1小时)
-        self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.update_songs)
         self.update_timer.start(60 * 60 * 1000)
+        logger.info("VoiceHub插件加载成功！")
+        # 延迟更新
+        QTimer.singleShot(100, self.update_songs)
 
     def update_songs(self):
         """启动更新"""
@@ -142,7 +165,8 @@ class Plugin(CW2Plugin):
         self.contentUpdated.emit([], "", "loading")
         self.retry_timer.stop()
 
-        self.worker_thread = FetchThread()
+        api_url = self.config.api_url or DEFAULT_API_URL
+        self.worker_thread = FetchThread(api_url)
         self.worker_thread.fetch_finished.connect(self.handle_success)
         self.worker_thread.fetch_failed.connect(self.handle_failure)
         self.worker_thread.start()
@@ -158,9 +182,9 @@ class Plugin(CW2Plugin):
         self.songs = songs
         self.display_date = display_date
         self.status = status
-        
+
         self.contentUpdated.emit(songs, display_date, status)
-        
+
         if status == "success":
             logger.info(f"VoiceHub排期更新成功: {display_date}, 共{len(songs)}首")
         else:
@@ -172,12 +196,6 @@ class Plugin(CW2Plugin):
         self.status = "error"
         self.contentUpdated.emit([], "", "error")
         self.retry_timer.start(10 * 60 * 1000)
-
-    def on_load(self):
-        super().on_load()
-        logger.info("VoiceHub插件加载成功！")
-        # 延迟更新
-        QTimer.singleShot(100, self.update_songs)
 
     def on_unload(self):
         logger.info("VoiceHub插件卸载成功！")

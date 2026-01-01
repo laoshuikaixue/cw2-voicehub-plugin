@@ -18,15 +18,16 @@ Widget {
             backend.init_content()
         }
     }
-    
+
     // 连接后端信号
     Connections {
         target: backend
+
         function onContentUpdated(newSongs, newDate, newStatus) {
             songs = newSongs;
             displayDate = newDate;
             status = newStatus;
-            
+
             if (newDate) {
                 root.text = "VoiceHub广播站排期 | " + newDate;
             } else {
@@ -47,7 +48,7 @@ Widget {
             id: contentLayout
             width: parent.width
             spacing: 2 // 减小歌曲之间的间距
-            
+
             // 状态提示文本 (加载/错误/无排期)
             Text {
                 visible: status !== "success"
@@ -60,28 +61,28 @@ Widget {
                 font.pointSize: 14
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
-                
+
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
-                
+
                 color: root.miniMode ? "#555" : (Theme.isDark() ? "#ccc" : "#555")
             }
-            
+
             // 歌曲列表
             Repeater {
                 model: status === "success" ? songs : 0
                 delegate: Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: songText.implicitHeight + 8 // 增加一点间距
-                    
+
                     Text {
                         id: songText
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.leftMargin: 8
                         anchors.verticalCenter: parent.verticalCenter
-                        
+
                         text: {
                             var s = modelData.song;
                             var seq = modelData.sequence || (index + 1);
@@ -90,18 +91,18 @@ Widget {
                             var req = s.requester || "未知";
                             return seq + ". " + artist + " - " + title + " - " + req;
                         }
-                        
+
                         font.pointSize: 12
                         font.bold: true
                         wrapMode: Text.Wrap
-                        
+
                         color: root.miniMode ? "#000" : (Theme.isDark() ? "#fff" : "#000")
-                        
+
                         onImplicitHeightChanged: restartAnimTimer.restart()
                     }
                 }
             }
-            
+
             // 版权信息
             Text {
                 visible: status === "success" && songs.length > 0
@@ -109,12 +110,12 @@ Widget {
                 font.pointSize: 10
                 horizontalAlignment: Text.AlignHCenter
                 opacity: 0.7
-                
+
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 10
                 Layout.bottomMargin: 10
-                
+
                 color: root.miniMode ? "#555" : (Theme.isDark() ? "#ccc" : "#555")
             }
         }
@@ -131,20 +132,20 @@ Widget {
     SequentialAnimation {
         id: autoScrollAnim
         loops: Animation.Infinite
-        
+
         // 1. 向下滚动
         NumberAnimation {
             id: scrollDown
             target: flickable
-            property: "contentY"
-            duration: 0 
+            "contentY"
+            duration: 0
             easing.type: Easing.Linear
         }
-        
+
         // 2. 立即平滑回滚顶部
         NumberAnimation {
             target: flickable
-            property: "contentY"
+            "contentY"
             to: 0
             duration: 1000
             easing.type: Easing.InOutQuad
@@ -154,10 +155,10 @@ Widget {
     function checkAndStartScroll() {
         autoScrollAnim.stop()
         flickable.contentY = 0
-        
+
         // 非成功状态不滚动
         if (status !== "success") return;
-        
+
         if (contentLayout.height > flickable.height) {
             var distance = contentLayout.height - flickable.height
             scrollDown.to = distance
