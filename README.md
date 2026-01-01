@@ -1,8 +1,7 @@
-# cw2-yiyan-plugin
+# cw2-voicehub-plugin
 
 ---
 
-## 简介
-一个用于展示一言的插件。每天分享一句话，激励大家学习。
+这是一个用于展示[VoiceHub](https://github.com/laoshuikaixue/VoiceHub)广播站点歌系统排期歌曲的ClassWidgets2插件。
 
 Powered By LaoShui @ 2026
