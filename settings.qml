@@ -5,86 +5,85 @@ import QtQuick.Layouts
 import RinUI
 import ClassWidgets.Plugins
 
-SettingsLayout {
+FluentPage {
     // 属性
     property var pluginId: "com.laoshui.voicehub"
     property var settings: Configs.data.plugins.configs[pluginId]
 
-    spacing: 4
+    title: qsTr("VoiceHub 插件设置")
 
-    Text {
-        text: qsTr("VoiceHub 插件设置")
-        font.pixelSize: 28
-        font.weight: Font.Bold
-        color: Theme.currentTheme.colors.textColor
-    }
-
-    SettingCard {
+    ColumnLayout {
         Layout.fillWidth: true
-        icon.name: "ic_fluent_globe_20_regular"
-        title: qsTr("API 地址")
-        description: qsTr("设置 VoiceHub API 的公开接口地址")
+        spacing: 0
 
-        ColumnLayout {
-            spacing: 8
-            
-            TextField {
-                id: apiUrlField
-                Layout.preferredWidth: 400
-                Layout.fillWidth: true
-                text: (settings && settings.api_url) ? settings.api_url : "https://voicehub.lao-shui.top/api/songs/public"
-                placeholderText: "https://example.com/api/songs/public"
+        SettingCard {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 4
+            icon.name: "ic_fluent_globe_20_regular"
+            title: qsTr("API 地址")
+            description: qsTr("设置 VoiceHub API 的公开接口地址")
+
+            ColumnLayout {
+                spacing: 8
                 
-                onEditingFinished: {
-                    if (text !== settings.api_url) {
-                        Configs.setPlugin(pluginId, "api_url", text)
+                TextField {
+                    id: apiUrlField
+                    Layout.preferredWidth: 400
+                    Layout.fillWidth: true
+                    text: (settings && settings.api_url) ? settings.api_url : "https://voicehub.lao-shui.top/api/songs/public"
+                    placeholderText: "https://example.com/api/songs/public"
+                    
+                    onEditingFinished: {
+                        if (text !== settings.api_url) {
+                            Configs.setPlugin(pluginId, "api_url", text)
+                        }
                     }
                 }
-            }
 
-            Text {
-                text: qsTr("默认: https://voicehub.lao-shui.top/api/songs/public")
-                font: Typography.caption
-                color: Theme.currentTheme.colors.textSecondaryColor
-            }
-        }
-    }
-
-    RowLayout {
-        Layout.fillWidth: true
-        Layout.bottomMargin: 4
-        spacing: 12
-
-        Button {
-            text: qsTr("测试连接")
-            icon.name: "ic_fluent_plug_connected_20_regular"
-            onClicked: testConnection(apiUrlField.text)
-        }
-
-        Button {
-            text: qsTr("重置为默认")
-            icon.name: "ic_fluent_arrow_reset_20_regular"
-            onClicked: {
-                apiUrlField.text = "https://voicehub.lao-shui.top/api/songs/public"
-                Configs.setPlugin(pluginId, "api_url", apiUrlField.text)
-                
-                floatLayer.createInfoBar({
-                    title: qsTr("重置成功"),
-                    text: qsTr("API 地址已重置为默认值"),
-                    severity: Severity.Success
-                })
+                Text {
+                    text: qsTr("默认: https://voicehub.lao-shui.top/api/songs/public")
+                    font: Typography.caption
+                    color: Theme.currentTheme.colors.textSecondaryColor
+                }
             }
         }
-    }
 
-    InfoBar {
-        Layout.fillWidth: true
-        title: qsTr("说明")
-        severity: Severity.Info
-        closable: false
-        text: "• " + qsTr("请确保API地址返回的数据格式与默认API兼容") + "<br>" +
-              "• " + qsTr("修改设置后将在下次刷新时生效") + "<br>" +
-              "• " + qsTr("如果连接失败，请检查网络连接和API地址是否正确")
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 4
+            spacing: 12
+
+            Button {
+                text: qsTr("测试连接")
+                icon.name: "ic_fluent_plug_connected_20_regular"
+                onClicked: testConnection(apiUrlField.text)
+            }
+
+            Button {
+                text: qsTr("重置为默认")
+                icon.name: "ic_fluent_arrow_reset_20_regular"
+                onClicked: {
+                    apiUrlField.text = "https://voicehub.lao-shui.top/api/songs/public"
+                    Configs.setPlugin(pluginId, "api_url", apiUrlField.text)
+                    
+                    floatLayer.createInfoBar({
+                        title: qsTr("重置成功"),
+                        text: qsTr("API 地址已重置为默认值"),
+                        severity: Severity.Success
+                    })
+                }
+            }
+        }
+
+        InfoBar {
+            Layout.fillWidth: true
+            title: qsTr("说明")
+            severity: Severity.Info
+            closable: false
+            text: "• " + qsTr("请确保API地址返回的数据格式与默认API兼容") + "<br>" +
+                  "• " + qsTr("修改设置后将在下次刷新时生效") + "<br>" +
+                  "• " + qsTr("如果连接失败，请检查网络连接和API地址是否正确")
+        }
     }
 
     function testConnection(url) {
